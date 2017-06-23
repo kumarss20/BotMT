@@ -52,50 +52,59 @@ bot.dialog('LOB', function (session) {
 // Add dialog to handle 'options' button click
 bot.dialog('LOBButtonClick', [
     function (session, args, next) {
-        // Get color and optional size from users utterance
-        var utterance = args.intent.matched[0];
-        var color = /(Consumer|Commercial|Free services)/i.exec(utterance);
-        var size = /\b(Outlook|Skype|Onedrive)\b/i.exec(utterance);
-		var choices = null;
-        if (color) {
-            // Initialize cart item
-            var item = session.dialogData.item = { 
-                product: "classic " + color[0].toLowerCase() + " t-shirt",
-                size: size ? size[0].toLowerCase() : null,
-                price: 25.0,
-                qty: 1
-            };
-            if (!item.size) {
-				console.log("item size is" + item.size);
-                // Prompt for size
-                //builder.Prompts.choice(session, "Campaigns are available for below products , What product would you like to see today ?", "Outlook|Skype|Onedrive",{ listStyle: builder.ListStyle.list });
-				session.send("Campaigns are available for below products , What product would you like to see today ?");
-				  var msg = new builder.Message(session);
-					msg.attachmentLayout(builder.AttachmentLayout.list)
-					msg.attachments([
-						new builder.HeroCard(session)
-							.buttons([
-								builder.CardAction.imBack(session, "show me the product - Outlook", "Outlook")
-							]),
-						new builder.HeroCard(session)
-							.buttons([
-								builder.CardAction.imBack(session, "show me the product - Skype", "Skype")
-							]),
-						new builder.HeroCard(session)
-							.buttons([
-								builder.CardAction.imBack(session, "show me the product - Onedrive", "Onedrive")
-						])
-					]);
-					session.send(msg).endDialog();
+		
+		
+					// Create connection to database
+				var config = {
+				  userName: 'kumarss', // update me
+				  password: 'Hahaha123#', // update me
+				  server: 'mtbot.database.windows.net', // update me
+				  options: {
+					  encrypt: true,
+					  database: 'TestChatBot', //update me
+					  rowCollectionOnDone:true, //for large number of data enabling this would result in huge memory usage
+					  rowCollectionOnRequestCompletion : true
+				  }
+				}
+				var connection1 = new Connection(config);
 
-            } else {
-                //Skip to next waterfall step
-                next();
-            }
-        } else {
-            // Invalid product
-            session.send("I'm sorry... That product wasn't found.").endDialog();
-        }   
+				// Attempt to connect and execute queries if connection goes through
+				connection1.on('connect', function(err) {
+					if (err) {
+						console.log(err)
+					}
+					else{
+						queryDatabase()
+					}
+				});
+				session.send("Campaigns are available for below products , What product would you like to see today ?");
+				function queryDatabase(){
+					console.log('Reading rows from the Table...');
+					// Read all rows from table
+					var result2 = [];
+					request = new Request(
+						"SELECT distinct Product from campaign",
+						function(err, rowCount, rows) {
+							console.log(rowCount + ' row(s) returned');
+							rows.forEach(function (row){
+								
+							var tempcard = new builder.HeroCard(session)
+												.buttons([
+													builder.CardAction.imBack(session, "show me the product - Outlook", row[0].value)
+												]);
+												
+								result2.push(tempcard);
+							});
+							console.log(result2)
+							var msg = new builder.Message(session);
+								msg.attachmentLayout(builder.AttachmentLayout.list)
+								msg.attachments(result2);
+								session.send(msg).endDialog();
+									}
+								);
+								
+							connection1.execSql(request);
+				}
     },
     function (session, results) {
         // Save size if prompted
@@ -110,8 +119,6 @@ bot.dialog('LOBButtonClick', [
         session.userData.cart.push(item);
     }
 ]).triggerAction({ matches: /(show|Outcome)\s.*Business/i });
-
-
 
 // Add dialog to return list of shirts available
 bot.dialog('options', function (session) {
@@ -153,7 +160,7 @@ bot.dialog('CampaignButtonClick', [
             if (!item.size) {
 				console.log("item size is" + item.size);
                 // Prompt for size
-                builder.Prompts.choice(session, "What report would you like?", "Delivery health|Outcome",{ listStyle: builder.ListStyle.list });
+                builder.Prompts.choice(session, "What report would you like?", "Delivery health|Outcome",{ listStyle: builder.ListStyle.button });
 				 // Read all rows from table
 
             } else {
@@ -228,7 +235,7 @@ bot.dialog('flipCoinDialog', [
 								result2.push(row[0].value);
 							});
 							console.log(result2)
-							builder.Prompts.choice(session, "Choose a campaign.", result2,{ listStyle: builder.ListStyle.list })
+							builder.Prompts.choice(session, "Choose a campaign.", result2,{ listStyle: builder.ListStyle.button })
 						}
 					);
 				connection1.execSql(request);
@@ -317,7 +324,7 @@ bot.dialog('flipCoinDialog', [
 // select a report type - Delivery Health|Outcome
 bot.dialog('reporttypeselection', [
     function (session, args) {
-		builder.Prompts.choice(session, "Following reports are available , What type of report would you like to see today ?", "Delivery Health|Outcome",{ listStyle: builder.ListStyle.list });
+		builder.Prompts.choice(session, "Following reports are available , What type of report would you like to see today ?", "Delivery Health|Outcome",{ listStyle: builder.ListStyle.button });
 				
     },
     function (session, results) {
