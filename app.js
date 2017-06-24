@@ -28,6 +28,8 @@ var bot = new builder.UniversalBot(connector, function (session) {
 	session.send("Type LOB to list the available Business areas");
 });
 
+
+
 // Add dialog to return list of shirts available
 bot.dialog('LOB', function (session) {
     var msg = new builder.Message(session);
@@ -35,15 +37,15 @@ bot.dialog('LOB', function (session) {
     msg.attachments([
         new builder.HeroCard(session)
             .buttons([
-                builder.CardAction.imBack(session, "show me Consumer Business area", "Consumer")
+                builder.CardAction.imBack(session, "Display available products in Consumer LoB", "Consumer")
             ]),
         new builder.HeroCard(session)
             .buttons([
-                builder.CardAction.imBack(session, "show me Commercial Business area", "Commercial")
+                builder.CardAction.imBack(session, "Display available products in Commercial LoB", "Commercial")
             ]),
 		new builder.HeroCard(session)
 			.buttons([
-				builder.CardAction.imBack(session, "show me Free services Business area", "Free services")
+				builder.CardAction.imBack(session, "Display available products in Free services LoB", "Free services")
 		])
     ]);
     session.send(msg).endDialog();
@@ -90,7 +92,7 @@ bot.dialog('LOBButtonClick', [
 								
 							var tempcard = new builder.HeroCard(session)
 												.buttons([
-													builder.CardAction.imBack(session, "show me the product - Outlook", row[0].value)
+													builder.CardAction.imBack(session, "Display available campaign for product - Outlook", row[0].value)
 												]);
 												
 								result2.push(tempcard);
@@ -118,7 +120,7 @@ bot.dialog('LOBButtonClick', [
         }
         session.userData.cart.push(item);
     }
-]).triggerAction({ matches: /(show|Outcome)\s.*Business/i });
+]).triggerAction({ matches: /(Display|Outcome)\s.*LoB/i });
 
 // Add dialog to return list of shirts available
 bot.dialog('options', function (session) {
@@ -127,15 +129,15 @@ bot.dialog('options', function (session) {
     msg.attachments([
         new builder.HeroCard(session)
             .buttons([
-                builder.CardAction.imBack(session, "show me Outlook Campaign information", "Outlook")
+                builder.CardAction.imBack(session, "Display Outlook Campaign information", "Outlook")
             ]),
         new builder.HeroCard(session)
             .buttons([
-                builder.CardAction.imBack(session, "show me Skype Campaign information", "Skype")
+                builder.CardAction.imBack(session, "Display Skype Campaign information", "Skype")
             ]),
 		new builder.HeroCard(session)
 			.buttons([
-				builder.CardAction.imBack(session, "show me Onedrive Campaign information", "Onedrive")
+				builder.CardAction.imBack(session, "Display Onedrive Campaign information", "Onedrive")
 		])
     ]);
     session.send(msg).endDialog();
@@ -193,7 +195,7 @@ bot.dialog('CampaignButtonClick', [
         // Send confirmation to users
         //session.send("A '%(size)s %(product)s' has been added to your cart.", item).endDialog();
     }
-]).triggerAction({ matches: /(show|Outcome)\s.*campaign/i });
+]).triggerAction({ matches: /(Display|Outcome)\s.*campaign/i });
 
 // Flip a coin
 bot.dialog('flipCoinDialog', [
@@ -243,6 +245,9 @@ bot.dialog('flipCoinDialog', [
     },
     function (session, results) {
 		
+		//console.log('selection...' + results.response.entity.toLowerCase());
+		
+		var titls = results.response.entity;
 		// Create connection to database
 				var config = {
 				  userName: 'kumarss', // update me
@@ -276,7 +281,10 @@ bot.dialog('flipCoinDialog', [
 						function(err, rowCount, rows) {
 							console.log(rowCount + ' row(s) returned');
 							rows.forEach(function (row){
-								result2.push(row[0].value);
+								var tempcard = new builder.ReceiptItem.create(session,'200000', 'Sent')
+												.image(builder.CardImage.create(session, 'https://maxcdn.icons8.com/Share/icon/nolan/Messaging//sent1600.png'))
+								result2.push(tempcard);
+								
 							});
 							console.log(rows)
 							
@@ -286,23 +294,8 @@ bot.dialog('flipCoinDialog', [
 								msg.attachments([
 									
 									new builder.ReceiptCard(session)
-									.title("Campaign Results")
-									.items([
-										builder.ReceiptItem.create(session, '200000', 'Sent')
-											.quantity(368)
-											.image(builder.CardImage.create(session, 'https://maxcdn.icons8.com/Share/icon/nolan/Messaging//sent1600.png')),
-										builder.ReceiptItem.create(session, '150000', 'Clicked')
-											.quantity(720)
-											.image(builder.CardImage.create(session, 'http://ubolratana.khonkaen.doae.go.th/logo/click.gif')),
-										builder.ReceiptItem.create(session, '150000', 'Delivered')
-											.quantity(720)
-											.image(builder.CardImage.create(session, 'https://d30y9cdsu7xlg0.cloudfront.net/png/240603-200.png')),
-										builder.ReceiptItem.create(session, '150000', 'Opened')
-											.quantity(720)
-											.image(builder.CardImage.create(session, 'https://png.icons8.com/mailbox-opened-flag-up/color/24%22%20title=%22Mailbox%20Opened%20Flag%20Up%22%20width=%2224%22%20height=%2224%22')),
-									])
-									//.tax('$ 7.50')
-									//.total('$ 90.95')
+									.title(titls)
+									.items(result2)
 									.buttons([
 										builder.CardAction.openUrl(session, 'https://azure.microsoft.com/en-us/pricing/', 'More Information')
 											.image('https://raw.githubusercontent.com/amido/azure-vector-icons/master/renders/microsoft-azure.png')
@@ -324,11 +317,11 @@ bot.dialog('flipCoinDialog', [
 // select a report type - Delivery Health|Outcome
 bot.dialog('reporttypeselection', [
     function (session, args) {
-		builder.Prompts.choice(session, "Following reports are available , What type of report would you like to see today ?", "Delivery Health|Outcome",{ listStyle: builder.ListStyle.button });
+		builder.Prompts.choice(session, "Following reports are available , What type of report would you like to see today ?", "Delivery Health Report|Outcome Report",{ listStyle: builder.ListStyle.button });
 				
     },
     function (session, results) {
 		session.beginDialog('flipCoinDialog');
     }
-]).triggerAction({ matches: /(show|Outcome)\s.*product/i });;
+]).triggerAction({ matches: /(Display|Outcome)\s.*product/i });;
 
