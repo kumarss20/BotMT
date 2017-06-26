@@ -24,6 +24,7 @@ server.post('/api/messages', connector.listen());
 // Create your bot with a function to receive messages from the user
 // Create bot and default message handler
 var bot = new builder.UniversalBot(connector, function (session) {
+	session.sendTyping();
     session.send("Hi , How are you , Which Line of Business i can help you with today ?");
 	session.send("Type LOB to list the available Business areas");
 });
@@ -80,6 +81,7 @@ bot.dialog('LOBButtonClick', [
 					}
 				});
 				session.send("Campaigns are available for below products , What product would you like to see today ?");
+				session.sendTyping();
 				function queryDatabase(){
 					console.log('Reading rows from the Table...');
 					// Read all rows from table
@@ -224,7 +226,7 @@ bot.dialog('flipCoinDialog', [
 						queryDatabase()
 					}
 				});
-			
+				session.sendTyping();
 				function queryDatabase(){
 					console.log('Reading rows from the Table...');
 					// Read all rows from table
@@ -271,7 +273,7 @@ bot.dialog('flipCoinDialog', [
 						queryDatabase()
 					}
 				});
-			
+				session.sendTyping();
 				function queryDatabase(){
 					console.log('Reading rows from the Table...');
 					// Read all rows from table
@@ -280,15 +282,15 @@ bot.dialog('flipCoinDialog', [
 						"SELECT TOP 1 ACTUALSENT,DEVLIVERED,BOUNCED,UNSUBSCRIBED,CLICKED,OPENED from campaign",
 						function(err, rowCount, rows) {
 							console.log(rowCount + ' row(s) returned');
-							rows.forEach(function (row){
-								var tempcard = new builder.ReceiptItem.create(session,'200000', 'Sent')
-												.image(builder.CardImage.create(session, 'https://maxcdn.icons8.com/Share/icon/nolan/Messaging//sent1600.png'))
-								result2.push(tempcard);
-								
-							});
-							console.log(rows)
 							
-							
+							    rows.forEach(function (columns) {
+								var rowObject = {};
+								columns.forEach(function (column) {
+											var tempcard = new builder.ReceiptItem.create(session,column.value,column.metadata.colName)
+												//.image(builder.CardImage.create(session, 'https://maxcdn.icons8.com/Share/icon/nolan/Messaging//sent1600.png'))
+											result2.push(tempcard);
+								});
+								});
 							    var msg = new builder.Message(session);
 								msg.attachmentLayout(builder.AttachmentLayout.list)
 								msg.attachments([
@@ -310,7 +312,7 @@ bot.dialog('flipCoinDialog', [
 				connection1.execSql(request);
 				}
 		
-		session.beginDialog('flipCoinDialog');
+		//session.beginDialog('flipCoinDialog');
     }
 ]);
 
