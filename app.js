@@ -210,29 +210,31 @@ bot.dialog('CampaignDialog', [
 												//.image(builder.CardImage.create(session, 'https://maxcdn.icons8.com/Share/icon/nolan/Messaging//sent1600.png'))
 											//result2.push(tempcard);
 											
-											var tempcard = new builder.HeroCard(session)
-												.buttons([
-													builder.CardAction.imBack(session, "Display available campaign for product - Outlook", row[0].value)
-												]);
+								// 			var tempcard = new builder.HeroCard(session)
+								// 				.buttons([
+								// 					builder.CardAction.imBack(session, column.metadata.colName +"  -   "+ column.value, column.value)
+								// 				]);
 												
-								result2.push(tempcard);
+								// result2.push(tempcard);
+
+								session.send(column.metadata.colName +"  -   "+ column.value);
 				
 								});
 								});
-							    var msg = new builder.Message(session);
-								msg.attachmentLayout(builder.AttachmentLayout.list)
-								msg.attachments([
+							    // var msg = new builder.Message(session);
+								// msg.attachmentLayout(builder.AttachmentLayout.list)
+								// msg.attachments([
 									
-									msg.attachments(result2);
-									//new builder.ReceiptCard(session)
-									//.title(titls)
-									//.items(result2)
-									//.buttons([
-									//	builder.CardAction.openUrl(session, 'https://azure.microsoft.com/en-us/pricing/', 'More Information')
-									//		.image('https://raw.githubusercontent.com/amido/azure-vector-icons/master/renders/microsoft-azure.png')
-									//])
-								]);
-								session.send(msg).endDialog();
+								// 	msg.attachments(result2)
+								// 	//new builder.ReceiptCard(session)
+								// 	//.title(titls)
+								// 	//.items(result2)
+								// 	//.buttons([
+								// 	//	builder.CardAction.openUrl(session, 'https://azure.microsoft.com/en-us/pricing/', 'More Information')
+								// 	//		.image('https://raw.githubusercontent.com/amido/azure-vector-icons/master/renders/microsoft-azure.png')
+								// 	//])
+								// ]);
+								// session.send(msg).endDialog();
 						}
 					);
 				connection1.execSql(request);
