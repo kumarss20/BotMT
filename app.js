@@ -27,9 +27,8 @@ var bot = new builder.UniversalBot(connector, function (session) {
 	session.sendTyping();
     session.send("Hi "+session.message .user.name+" , How are you , Which Line of Business i can help you with today ?");
 	session.send("Type LOB to list the available Business areas");
+	session.userData.jolly = "Jolly";
 });
-
-
 
 // Add dialog to return list of shirts available
 bot.dialog('LOB', function (session) {
@@ -54,10 +53,8 @@ bot.dialog('LOB', function (session) {
 
 // Add dialog to handle 'options' button click
 bot.dialog('LOBButtonClick', [
-    function (session, args, next) {
-		
-		
-					// Create connection to database
+    function (session, args) {
+				// Create connection to database
 				var config = {
 				  userName: 'kumarss', // update me
 				  password: 'Hahaha123#', // update me
@@ -97,13 +94,17 @@ bot.dialog('LOBButtonClick', [
 													builder.CardAction.imBack(session, "Display available campaign for product - Outlook", row[0].value)
 												]);
 												
-								result2.push(tempcard);
+								//result2.push(tempcard);
+								result2.push(row[0].value);
 							});
+							
+							builder.Prompts.choice(session, "Display available campaign for product - Outlook", result2,{ listStyle: builder.ListStyle.button });
+
 							console.log(result2)
-							var msg = new builder.Message(session);
-								msg.attachmentLayout(builder.AttachmentLayout.list)
-								msg.attachments(result2);
-								session.send(msg).endDialog();
+							// var msg = new builder.Message(session);
+							// 	msg.attachmentLayout(builder.AttachmentLayout.list)
+							// 	msg.attachments(result2);
+							// 	session.send(msg).endDialog();
 									}
 								);
 								
@@ -112,95 +113,15 @@ bot.dialog('LOBButtonClick', [
     },
     function (session, results) {
         // Save size if prompted
-        var item = session.dialogData.item;
-        if (results.response) {
+       if (results.response) {
+			session.userData.product=  results.response.entity;
 			session.beginDialog('reporttypeselection');
 			}
-        // Add to cart
-        if (!session.userData.cart) {
-            session.userData.cart = [];
-        }
-        session.userData.cart.push(item);
     }
 ]).triggerAction({ matches: /(Display|Outcome)\s.*LoB/i });
 
-// Add dialog to return list of shirts available
-bot.dialog('options', function (session) {
-    var msg = new builder.Message(session);
-    msg.attachmentLayout(builder.AttachmentLayout.list)
-    msg.attachments([
-        new builder.HeroCard(session)
-            .buttons([
-                builder.CardAction.imBack(session, "Display Outlook Campaign information", "Outlook")
-            ]),
-        new builder.HeroCard(session)
-            .buttons([
-                builder.CardAction.imBack(session, "Display Skype Campaign information", "Skype")
-            ]),
-		new builder.HeroCard(session)
-			.buttons([
-				builder.CardAction.imBack(session, "Display Onedrive Campaign information", "Onedrive")
-		])
-    ]);
-    session.send(msg).endDialog();
-}).triggerAction({ matches: /^(product|list)/i });
-
-// Add dialog to handle 'options' button click
-bot.dialog('CampaignButtonClick', [
-    function (session, args, next) {
-        // Get color and optional size from users utterance
-        var utterance = args.intent.matched[0];
-        var color = /(Outlook|Skype|Onedrive)/i.exec(utterance);
-        var size = /\b(Delivery health|outcome)\b/i.exec(utterance);
-		var choices = null;
-        if (color) {
-            // Initialize cart item
-            var item = session.dialogData.item = { 
-                product: "classic " + color[0].toLowerCase() + " t-shirt",
-                size: size ? size[0].toLowerCase() : null,
-                price: 25.0,
-                qty: 1
-            };
-            if (!item.size) {
-				console.log("item size is" + item.size);
-                // Prompt for size
-                builder.Prompts.choice(session, "What report would you like?", "Delivery health|Outcome",{ listStyle: builder.ListStyle.button });
-				 // Read all rows from table
-
-            } else {
-                //Skip to next waterfall step
-                next();
-            }
-        } else {
-            // Invalid product
-            session.send("I'm sorry... That product wasn't found.").endDialog();
-        }   
-    },
-    function (session, results) {
-        // Save size if prompted
-        var item = session.dialogData.item;
-        if (results.response) {
-            item.size = results.response.entity.toLowerCase();
-			switch (results.response.index) {
-			case 0 :
-			session.beginDialog('flipCoinDialog');
-            break;
-			}
-        }
-
-        // Add to cart
-        if (!session.userData.cart) {
-            session.userData.cart = [];
-        }
-        session.userData.cart.push(item);
-
-        // Send confirmation to users
-        //session.send("A '%(size)s %(product)s' has been added to your cart.", item).endDialog();
-    }
-]).triggerAction({ matches: /(Display|Outcome)\s.*campaign/i });
-
-// Flip a coin
-bot.dialog('flipCoinDialog', [
+// choose a campaign
+bot.dialog('CampaignDialog', [
     function (session, args) {
 
 			// Create connection to database
@@ -227,12 +148,13 @@ bot.dialog('flipCoinDialog', [
 					}
 				});
 				session.sendTyping();
+				console.log("SELECT distinct CAMPAIGNNAME from campaign");
 				function queryDatabase(){
 					console.log('Reading rows from the Table...');
 					// Read all rows from table
 					var result2 = [];
 					request = new Request(
-						"SELECT distinct CAMPAIGNNAME from campaign",
+						"SELECT distinct CAMPAIGNNAME from campaign where product = '"+session.userData.product+"'",
 						function(err, rowCount, rows) {
 							console.log(rowCount + ' row(s) returned');
 							rows.forEach(function (row){
@@ -246,9 +168,7 @@ bot.dialog('flipCoinDialog', [
 				}
     },
     function (session, results) {
-		
-		//console.log('selection...' + results.response.entity.toLowerCase());
-		
+		console.log('selection...' + results.response.entity.toLowerCase());	
 		var titls = results.response.entity;
 		// Create connection to database
 				var config = {
@@ -279,39 +199,44 @@ bot.dialog('flipCoinDialog', [
 					// Read all rows from table
 					var result2 = [];
 					request = new Request(
-						"SELECT TOP 1 ACTUALSENT,DEVLIVERED,BOUNCED,UNSUBSCRIBED,CLICKED,OPENED from campaign",
+						"SELECT TOP 1 ACTUALSENT,DEVLIVERED,BOUNCED,UNSUBSCRIBED,CLICKED,OPENED from campaign where campaignname = '" + titls +"'",
 						function(err, rowCount, rows) {
 							console.log(rowCount + ' row(s) returned');
 							
 							    rows.forEach(function (columns) {
 								var rowObject = {};
 								columns.forEach(function (column) {
-											var tempcard = new builder.ReceiptItem.create(session,column.value,column.metadata.colName)
+											//var tempcard = new builder.ReceiptItem.create(session,column.value,column.metadata.colName)
 												//.image(builder.CardImage.create(session, 'https://maxcdn.icons8.com/Share/icon/nolan/Messaging//sent1600.png'))
-											result2.push(tempcard);
+											//result2.push(tempcard);
+											
+											var tempcard = new builder.HeroCard(session)
+												.buttons([
+													builder.CardAction.imBack(session, "Display available campaign for product - Outlook", row[0].value)
+												]);
+												
+								result2.push(tempcard);
+				
 								});
 								});
 							    var msg = new builder.Message(session);
 								msg.attachmentLayout(builder.AttachmentLayout.list)
 								msg.attachments([
 									
-									new builder.ReceiptCard(session)
-									.title(titls)
-									.items(result2)
-									.buttons([
-										builder.CardAction.openUrl(session, 'https://azure.microsoft.com/en-us/pricing/', 'More Information')
-											.image('https://raw.githubusercontent.com/amido/azure-vector-icons/master/renders/microsoft-azure.png')
-									])
-									
-									
+									msg.attachments(result2);
+									//new builder.ReceiptCard(session)
+									//.title(titls)
+									//.items(result2)
+									//.buttons([
+									//	builder.CardAction.openUrl(session, 'https://azure.microsoft.com/en-us/pricing/', 'More Information')
+									//		.image('https://raw.githubusercontent.com/amido/azure-vector-icons/master/renders/microsoft-azure.png')
+									//])
 								]);
 								session.send(msg).endDialog();
-							
 						}
 					);
 				connection1.execSql(request);
 				}
-		
 		//session.beginDialog('flipCoinDialog');
     }
 ]);
@@ -320,10 +245,9 @@ bot.dialog('flipCoinDialog', [
 bot.dialog('reporttypeselection', [
     function (session, args) {
 		builder.Prompts.choice(session, "Following reports are available , What type of report would you like to see today ?", "Delivery Health Report|Outcome Report",{ listStyle: builder.ListStyle.button });
-				
     },
     function (session, results) {
-		session.beginDialog('flipCoinDialog');
+		session.beginDialog('CampaignDialog');
     }
-]).triggerAction({ matches: /(Display|Outcome)\s.*product/i });;
+]).triggerAction({ matches: /(Display|show)\s.*product/i });;
 
