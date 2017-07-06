@@ -47,7 +47,7 @@ var bot = new builder.UniversalBot(connector, function (session) {
 					else{
 						var result2 = [];
 						request = new Request(
-											"select * from UserLog where UserID = '"+session.message .user.id+"'",
+											"select * from UserLog where UserName = '"+session.message .user.name+"'",
 											function(err, rowCount, rows) {
 												console.log(rowCount + ' row(s) returned');
 												rows.forEach(function (row){
