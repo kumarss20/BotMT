@@ -25,9 +25,55 @@ server.post('/api/messages', connector.listen());
 // Create bot and default message handler
 var bot = new builder.UniversalBot(connector, function (session) {
 	session.sendTyping();
-    session.send("Hi "+session.message .user.name+" , How are you , Which Line of Business i can help you with today ?");
-	session.send("Type LOB to list the available Business areas");
-	session.userData.jolly = "Jolly";
+				// Create connection to database
+				var config = {
+				  userName: 'kumarss', // update me
+				  password: 'Hahaha123#', // update me
+				  server: 'mtbot.database.windows.net', // update me
+				  options: {
+					  encrypt: true,
+					  database: 'TestChatBot', //update me
+					  rowCollectionOnDone:true, //for large number of data enabling this would result in huge memory usage
+					  rowCollectionOnRequestCompletion : true
+				  }
+				}
+				var connection1 = new Connection(config);
+
+				// Attempt to connect and execute queries if connection goes through
+				connection1.on('connect', function(err) {
+					if (err) {
+						console.log(err)
+					}
+					else{
+						var result2 = [];
+						request = new Request(
+											"select * from UserLog where UserID = '"+session.message .user.id+"'",
+											function(err, rowCount, rows) {
+												console.log(rowCount + ' row(s) returned');
+												rows.forEach(function (row){
+													result2.push(row[0].value);
+												});
+											if(result2.length > 0)
+											{
+												session.say('Hello World', 'This is the text that will be spoken by Cortana.');
+												session.send("Hi "+session.message .user.name+" , How are you , Which Line of Business i can help you with today ?");
+												session.send("Type LOB to list the available Business areas");
+												session.userData.jolly = "Jolly";
+											}
+											else
+											{
+												session.send("Hi "+session.message .user.name+" , You dont have access to chat with me . Please contact administrator?");
+											}
+										}
+										
+									);
+									
+						connection1.execSql(request);
+					}
+				});
+	
+
+	
 });
 
 // Add dialog to return list of shirts available
@@ -84,7 +130,7 @@ bot.dialog('LOBButtonClick', [
 					// Read all rows from table
 					var result2 = [];
 					request = new Request(
-						"SELECT distinct Product from campaign",
+						"select distinct product from product p inner join campaign c on c.productid = p.id",
 						function(err, rowCount, rows) {
 							console.log(rowCount + ' row(s) returned');
 							rows.forEach(function (row){
@@ -148,7 +194,7 @@ bot.dialog('CampaignDialog', [
 					}
 				});
 				session.sendTyping();
-				console.log("SELECT distinct CAMPAIGNNAME from campaign");
+
 				function queryDatabase(){
 					console.log('Reading rows from the Table...');
 					// Read all rows from table
@@ -253,3 +299,29 @@ bot.dialog('reporttypeselection', [
     }
 ]).triggerAction({ matches: /(Display|show)\s.*product/i });;
 
+bot.dialog('/delete', (session) => {
+delete session.userData
+session.endDialog('Everything has been wiped out')
+
+})
+.triggerAction({
+matches: /delete all/i,
+confirmPrompt: "This will wipe everything out. Are you sure?"
+});
+
+function queryDB(query){
+	console.log('Reading rows from the Table...');
+	// Read all rows from table
+	var result2 = [];
+	request = new Request(
+						query,
+						function(err, rowCount, rows) {
+							console.log(rowCount + ' row(s) returned');
+							rows.forEach(function (row){
+								result2.push(row[0].value);
+							});
+					}
+				);
+				
+			connection1.execSql(request);
+}
