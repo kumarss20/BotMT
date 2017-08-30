@@ -25,6 +25,7 @@ server.post('/api/messages', connector.listen());
 // Create bot and default message handler
 var bot = new builder.UniversalBot(connector, function (session) {
 	session.sendTyping();
+	session.send("Hi Dude , How are you , Which Line of Business i can help you with today ?");
 				// Create connection to database
 				var config = {
 				  userName: 'kumarss', // update me
