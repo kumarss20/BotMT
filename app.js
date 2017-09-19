@@ -30,7 +30,6 @@ server.post('/api/messages', connector.listen());
 // Create bot and default message handler
 var bot = new builder.UniversalBot(connector, function (session) {
 session.sendTyping();
-session.send("Hi "+session.message .user.name+" , How are you ?");
 // Create connection to database
 var config = {
  userName: 'testdbuser', // update me
@@ -386,6 +385,10 @@ connection1.execSql(request);
 function sendInline(session, filePath, contentType, attachmentFileName) {
     fs.readFile(filePath, function (err, data) {
         if (err) {
+            
+            var card = createReceiptCard(session);
+            var msgs = new builder.Message(session).addAttachment(card);
+            session.send(msgs);
             return session.send('Oops. Error reading file.');
         }
 
@@ -437,4 +440,24 @@ result2.push(row[0].value);
 }
 );
 connection1.execSql(request);
+}
+
+function createReceiptCard(session) {
+    return new builder.ReceiptCard(session)
+        .title('Report')
+
+        .items([
+            builder.ReceiptItem.create(session, '100000', 'Actual Sent')
+                .quantity(100000)
+                .image(builder.CardImage.create(session, 'https://github.com/amido/azure-vector-icons/raw/master/renders/traffic-manager.png')),
+            builder.ReceiptItem.create(session, '90000', 'Read')
+                .quantity(90000)
+                .image(builder.CardImage.create(session, 'https://github.com/amido/azure-vector-icons/raw/master/renders/cloud-service.png')),
+            builder.ReceiptItem.create(session, '90000', 'Read')
+                .quantity(90000)
+                .image(builder.CardImage.create(session, 'https://github.com/amido/azure-vector-icons/raw/master/renders/cloud-service.png')),
+            builder.ReceiptItem.create(session, '80000', 'Bounced')
+                .quantity(90000)
+                .image(builder.CardImage.create(session, 'https://github.com/amido/azure-vector-icons/raw/master/renders/cloud-service.png'))
+        ]);
 }
