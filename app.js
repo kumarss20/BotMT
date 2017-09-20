@@ -373,7 +373,10 @@ canvas.toBuffer(function (err, buf) {
  if (err) throw err;
  fs.writeFile(__dirname + '/pie.png', buf);
 });
-sendInline(session, __dirname + '/pie.png', 'image/png', 'pie.png');
+var card = createReceiptCard(session);
+var msgs = new builder.Message(session).addAttachment(card);
+session.send(msgs);
+//sendInline(session, __dirname + '/pie.png', 'image/png', 'pie.png');
 }
 );
 connection1.execSql(request);
@@ -386,9 +389,7 @@ function sendInline(session, filePath, contentType, attachmentFileName) {
     fs.readFile(filePath, function (err, data) {
         if (err) {
             
-            var card = createReceiptCard(session);
-            var msgs = new builder.Message(session).addAttachment(card);
-            session.send(msgs);
+        
             return session.send('Oops. Error reading file.');
         }
 
@@ -448,16 +449,16 @@ function createReceiptCard(session) {
 
         .items([
             builder.ReceiptItem.create(session, '100000', 'Actual Sent')
-                .quantity(100000)
-                .image(builder.CardImage.create(session, 'https://github.com/amido/azure-vector-icons/raw/master/renders/traffic-manager.png')),
+                .quantity(100000),
+               // .image(builder.CardImage.create(session, 'https://github.com/amido/azure-vector-icons/raw/master/renders/traffic-manager.png')),
             builder.ReceiptItem.create(session, '90000', 'Read')
-                .quantity(90000)
-                .image(builder.CardImage.create(session, 'https://github.com/amido/azure-vector-icons/raw/master/renders/cloud-service.png')),
+                .quantity(90000),
+                //.image(builder.CardImage.create(session, 'https://github.com/amido/azure-vector-icons/raw/master/renders/cloud-service.png')),
             builder.ReceiptItem.create(session, '90000', 'Read')
-                .quantity(90000)
-                .image(builder.CardImage.create(session, 'https://github.com/amido/azure-vector-icons/raw/master/renders/cloud-service.png')),
+                .quantity(90000),
+               // .image(builder.CardImage.create(session, 'https://github.com/amido/azure-vector-icons/raw/master/renders/cloud-service.png')),
             builder.ReceiptItem.create(session, '80000', 'Bounced')
                 .quantity(90000)
-                .image(builder.CardImage.create(session, 'https://github.com/amido/azure-vector-icons/raw/master/renders/cloud-service.png'))
+               // .image(builder.CardImage.create(session, 'https://github.com/amido/azure-vector-icons/raw/master/renders/cloud-service.png'))
         ]);
 }
